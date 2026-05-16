@@ -1,0 +1,605 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Share+Tech+Mono&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --j-bg: #020d18;
+    --j-surface: #030f1f;
+    --j-panel: #041526;
+    --j-accent: #00c8ff;
+    --j-accent2: #0af;
+    --j-dim: #0a2a3d;
+    --j-border: rgba(0,200,255,0.2);
+    --j-border2: rgba(0,200,255,0.5);
+    --j-text: #b8e8f8;
+    --j-muted: #4a8fa8;
+    --j-glow: 0 0 12px rgba(0,200,255,0.4);
+    --j-user-bg: rgba(0,120,180,0.15);
+    --j-ai-bg: rgba(0,200,255,0.05);
+  }
+
+  .jarvis-root {
+    background: var(--j-bg);
+    min-height: 600px;
+    border-radius: 12px;
+    border: 1px solid var(--j-border2);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,200,255,0.1), inset 0 0 60px rgba(0,15,30,0.8);
+  }
+
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,200,255,0.15), transparent);
+    animation: scan 4s linear infinite;
+    pointer-events: none; z-index: 1;
+  }
+  @keyframes scan { 0%{top:-2px} 100%{top:100%} }
+
+  .header {
+    background: var(--j-panel);
+    border-bottom: 1px solid var(--j-border2);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .arc-reactor {
+    width: 42px; height: 42px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .arc-reactor svg { width: 100%; height: 100%; }
+
+  .reactor-ring {
+    animation: rotate 3s linear infinite;
+    transform-origin: center;
+  }
+  @keyframes rotate { from{transform:rotate(0deg) translateX(13px) rotate(0deg)} to{transform:rotate(360deg) translateX(13px) rotate(-360deg)} }
+
+  .reactor-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .header-info { flex: 1; }
+  .header-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--j-accent);
+    letter-spacing: 3px;
+    text-shadow: var(--j-glow);
+  }
+  .header-subtitle {
+    font-size: 10px;
+    color: var(--j-muted);
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  .status-dots {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--j-accent);
+    box-shadow: 0 0 6px var(--j-accent);
+    animation: blink 2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.3s; background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+  .dot:nth-child(3) { animation-delay: 0.6s; background: #ffaa00; box-shadow: 0 0 6px #ffaa00; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .quick-actions {
+    background: var(--j-panel);
+    border-bottom: 1px solid var(--j-border);
+    padding: 8px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: relative; z-index: 2;
+  }
+  .quick-actions::-webkit-scrollbar { display: none; }
+
+  .qa-btn {
+    background: transparent;
+    border: 1px solid var(--j-border2);
+    color: var(--j-accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .qa-btn i { font-size: 12px; }
+  .qa-btn:hover {
+    background: rgba(0,200,255,0.1);
+    border-color: var(--j-accent);
+    box-shadow: var(--j-glow);
+    color: #fff;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative; z-index: 2;
+    min-height: 300px;
+    max-height: 360px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--j-border2) transparent;
+  }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    animation: fadeSlide 0.3s ease-out;
+  }
+  @keyframes fadeSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 28px; height: 28px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0;
+    border: 1px solid var(--j-border2);
+  }
+  .avatar.ai { background: rgba(0,200,255,0.1); color: var(--j-accent); }
+  .avatar.user { background: rgba(0,120,255,0.15); color: #6af; }
+
+  .bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--j-text);
+    position: relative;
+  }
+  .msg.ai .bubble {
+    background: var(--j-ai-bg);
+    border: 1px solid var(--j-border);
+    border-left: 2px solid var(--j-accent);
+  }
+  .msg.user .bubble {
+    background: var(--j-user-bg);
+    border: 1px solid rgba(0,120,255,0.3);
+    border-right: 2px solid #4af;
+    text-align: right;
+  }
+  .bubble-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--j-muted);
+    margin-bottom: 4px;
+  }
+  .msg.user .bubble-label { color: #4a7fa8; }
+
+  .typing-indicator {
+    display: flex; align-items: center; gap: 4px; padding: 4px 0;
+  }
+  .typing-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--j-accent);
+    animation: typingBounce 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+  .input-area {
+    background: var(--j-panel);
+    border-top: 1px solid var(--j-border2);
+    padding: 12px 16px;
+    position: relative; z-index: 2;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .input-wrapper {
+    flex: 1;
+    border: 1px solid var(--j-border2);
+    border-radius: 4px;
+    background: rgba(0,200,255,0.03);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: flex-end;
+  }
+  .input-wrapper:focus-within {
+    border-color: var(--j-accent);
+    box-shadow: var(--j-glow);
+  }
+
+  #user-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--j-text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    resize: none;
+    min-height: 40px;
+    max-height: 100px;
+    line-height: 1.5;
+  }
+  #user-input::placeholder { color: var(--j-muted); opacity: 0.6; }
+
+  .send-btn {
+    width: 40px; height: 40px;
+    background: rgba(0,200,255,0.1);
+    border: 1px solid var(--j-border2);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--j-accent);
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover:not(:disabled) {
+    background: rgba(0,200,255,0.2);
+    box-shadow: var(--j-glow);
+  }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    font-size: 9px;
+    color: var(--j-muted);
+    letter-spacing: 1px;
+  }
+
+  .system-bar {
+    display: flex; gap: 16px;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+    color: var(--j-muted);
+  }
+  .empty-arc { font-size: 48px; color: var(--j-accent); opacity: 0.3; animation: pulse 2s infinite; }
+  .empty-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    color: var(--j-accent);
+    letter-spacing: 4px;
+    opacity: 0.6;
+    text-align: center;
+  }
+  .empty-sub { font-size: 11px; letter-spacing: 1px; opacity: 0.5; text-align: center; }
+
+  .msg pre {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--j-border);
+    border-radius: 3px;
+    padding: 8px;
+    margin: 6px 0;
+    overflow-x: auto;
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .msg code { font-family: 'Share Tech Mono', monospace; color: #7ef; font-size: 12px; }
+
+  .corner {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-color: var(--j-accent);
+    border-style: solid;
+    opacity: 0.6;
+    z-index: 3;
+  }
+  .corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+  .corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+  .corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+  .error-msg { color: #ff6666; }
+</style>
+
+<div class="jarvis-root" id="root">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <div class="grid-bg"></div>
+  <div class="scan-line"></div>
+
+  <div class="header">
+    <div class="arc-reactor">
+      <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="21" cy="21" r="20" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+        <circle cx="21" cy="21" r="14" stroke="rgba(0,200,255,0.5)" stroke-width="1"/>
+        <circle cx="21" cy="21" r="7" fill="rgba(0,200,255,0.15)" stroke="#00c8ff" stroke-width="1.5" class="reactor-pulse"/>
+        <circle cx="21" cy="8" r="2.5" fill="#00c8ff" class="reactor-ring"/>
+        <circle cx="21" cy="21" r="3" fill="#00c8ff" class="reactor-pulse"/>
+      </svg>
+    </div>
+    <div class="header-info">
+      <div class="header-title">J.A.R.V.I.S.</div>
+      <div class="header-subtitle">JUST A RATHER VERY INTELLIGENT SYSTEM · ONLINE</div>
+    </div>
+    <div class="status-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="qa-btn" onclick="quickPrompt('What tasks should I focus on today?')">
+      <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Daily Plan
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Help me write a professional email')">
+      <i class="ti ti-mail" aria-hidden="true"></i> Draft Email
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Help me debug my code and explain the issue')">
+      <i class="ti ti-code" aria-hidden="true"></i> Debug Code
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Summarize this for me and give key takeaways')">
+      <i class="ti ti-file-text" aria-hidden="true"></i> Summarize
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Help me brainstorm ideas for my project')">
+      <i class="ti ti-bulb" aria-hidden="true"></i> Brainstorm
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Search and explain the latest tech news today')">
+      <i class="ti ti-world" aria-hidden="true"></i> Web Search
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Help me plan my week and set priorities')">
+      <i class="ti ti-calendar" aria-hidden="true"></i> Weekly Plan
+    </button>
+    <button class="qa-btn" onclick="quickPrompt('Create a detailed report template for me')">
+      <i class="ti ti-report" aria-hidden="true"></i> Report
+    </button>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-arc"><i class="ti ti-robot" aria-hidden="true"></i></div>
+      <div class="empty-title">SYSTEMS READY</div>
+      <div class="empty-sub">How may I assist you today, sir?<br>Ask me anything or use a quick action above.</div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <div class="input-wrapper">
+        <textarea id="user-input" rows="1" placeholder="Give me a command, sir..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      </div>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()" aria-label="Send message">
+        <i class="ti ti-send" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="input-footer">
+      <span id="sys-time">SYSTEM CLOCK: --:--:--</span>
+      <span>ENTER TO SEND · SHIFT+ENTER FOR NEWLINE</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), a highly capable personal AI assistant inspired by Tony Stark's AI. You assist with all daily laptop tasks with efficiency and a touch of dry wit.
+
+Your capabilities:
+- Writing & editing: emails, reports, essays, code, documentation
+- Planning & productivity: task management, scheduling, project planning
+- Research & analysis: web searches, data analysis, summarization
+- Coding: debugging, writing code in any language, explaining concepts
+- Creative work: brainstorming, content creation, design advice
+- Communication: drafting professional or casual messages
+- General knowledge: answering questions on any topic
+
+Personality:
+- Highly capable and efficient
+- Occasionally use subtle wit and dry humor like the real JARVIS
+- Address the user respectfully (occasionally "sir" or "boss")
+- Be concise but thorough
+- When asked to search the web, do so using your web search tool
+
+Format your responses clearly with:
+- Use markdown formatting (bold, code blocks, lists) where appropriate
+- Keep responses focused and actionable
+- For code, always use proper code blocks
+
+You are running directly on the user's device to help with everything they do on their laptop.`;
+
+let messages = [];
+let isLoading = false;
+
+function formatTime() {
+  return new Date().toLocaleTimeString('en-US', {hour12: false});
+}
+
+function updateClock() {
+  const el = document.getElementById('sys-time');
+  if (el) el.textContent = 'SYSTEM CLOCK: ' + formatTime();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function quickPrompt(text) {
+  document.getElementById('user-input').value = text;
+  sendMessage();
+}
+
+function formatMsg(text) {
+  text = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (m,lang,code) =>
+    `<pre><code>${code.trim()}</code></pre>`);
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#00c8ff">$1</strong>');
+  text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  text = text.replace(/^### (.+)$/gm, '<div style="font-family:Orbitron,monospace;font-size:12px;color:#00c8ff;letter-spacing:2px;margin:8px 0 4px">$1</div>');
+  text = text.replace(/^## (.+)$/gm, '<div style="font-family:Orbitron,monospace;font-size:13px;color:#00c8ff;letter-spacing:2px;margin:10px 0 4px">$1</div>');
+  text = text.replace(/^- (.+)$/gm, '<div style="padding-left:12px;margin:2px 0">› $1</div>');
+  text = text.replace(/^\d+\. (.+)$/gm, '<div style="padding-left:12px;margin:2px 0">▸ $1</div>');
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+
+function addMsg(role, text, isError=false) {
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const isAI = role === 'ai';
+  div.innerHTML = `
+    <div class="avatar ${role}" aria-hidden="true">${isAI ? '<i class="ti ti-robot"></i>' : '<i class="ti ti-user"></i>'}</div>
+    <div class="bubble">
+      <div class="bubble-label">${isAI ? 'JARVIS · ' + formatTime() : 'YOU · ' + formatTime()}</div>
+      <div class="content ${isError ? 'error-msg' : ''}">${isAI ? formatMsg(text) : text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>`;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="avatar ai" aria-hidden="true"><i class="ti ti-robot"></i></div>
+    <div class="bubble">
+      <div class="bubble-label">JARVIS · PROCESSING...</div>
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  if (isLoading) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+
+  addMsg('user', text);
+  messages.push({ role: 'user', content: text });
+
+  addTyping();
+
+  try {
+    const body = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: messages,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+    };
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await resp.json();
+
+    if (data.error) throw new Error(data.error.message);
+
+    const fullText = data.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n');
+
+    const assistantContent = data.content
+      .map(b => {
+        if (b.type === 'text') return b.text;
+        if (b.type === 'tool_use') return `[Searching: ${b.input?.query || 'web'}]`;
+        return '';
+      })
+      .filter(Boolean)
+      .join('\n');
+
+    removeTyping();
+    addMsg('ai', fullText || assistantContent || 'Systems nominal. No response generated.');
+    messages.push({ role: 'assistant', content: data.content });
+
+  } catch(err) {
+    removeTyping();
+    addMsg('ai', `SYSTEM ERROR: ${err.message || 'Connection to AI core failed. Check network.'}`, true);
+    messages.pop();
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+  input.focus();
+}
+</script>
